@@ -37,9 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    #My apps
-    'rtxapi',
+    
+    #APIS
+    'rtxapi.apps.RtxapiConfig',
+    'rest_framework'
 ]
 
 MIDDLEWARE = [
