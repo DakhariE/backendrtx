@@ -23,7 +23,7 @@ image = cv2.imdecode(array, cv2.COLOR_BGR2BGR555)
 
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-cars = car_id.detectMultiScale(gray, 1.5, 1)
+cars = car_id.detectMultiScale(gray, 1.1, 1)
 
 for (x,y,w,h) in cars:
     cv2.rectangle(image, (x,y), (x+w, y+h), (0,0,255), 2)
