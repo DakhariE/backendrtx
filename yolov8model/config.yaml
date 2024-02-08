@@ -1,0 +1,10 @@
+#This path should be you local path to the project.
+path: C:\\vscode\\rtxcarapp\\backendrtx\\yolov8model
+train: images/train
+val: images/train
+
+names:
+  0: sedan
+  1: suv
+  2: van
+  3: pickup
