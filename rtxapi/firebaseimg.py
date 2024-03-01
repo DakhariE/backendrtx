@@ -8,7 +8,7 @@ import cv2
 
 
 car_id = cv2.CascadeClassifier('C:\\vscode\\rtxcarapp\\backendrtx\\rtxapi\\haarcascade_car.xml')
-#These to lines are needed validate session in 
+#These to lines are needed validate session in firebase 
 cred = credentials.Certificate("./rtxapi/key.json")
 app = firebase_admin.initialize_app(cred)
 

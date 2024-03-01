@@ -1,0 +1,46 @@
+from rtxapi.models import AmberAlert
+import random
+import string
+from datetime import date
+
+
+
+ex_make = ["Ford", "Toyota", "Honda", "BMW","Tesla"]
+ex_model = {
+    "Ford": ["F-150","Escape","Focus","Mustang"],
+    "Toyota": ["Corolla","Camry","RAV4","Tacoma"],
+    "Honda" : ["CR-V","Civic","Accord"],
+    "BMW" : ["X5", "X3", "X5", "3 Series", "4 Series"],
+    "Tesla" : ["Model X", "Model Y", "Model S", "Model 3"]
+}
+ex_info = ["No additional information on vehicle"]
+ex_desc = "There is a missing male 8 yro last seen"
+ex_color = ["Black", "White", "Blue", "Red","Gray"]
+ex_name = ["Sally Smith", "John Miller"]
+
+def randomLP(x):
+    LP = ""
+    for i in range(x):
+        LP += random.choice((string.ascii_uppercase) + (string.digits))
+    return LP
+
+new_objects = []
+def populateDB(x):
+    for i in range(x):
+        tmp_name = random.choice(ex_name),
+        tmp_desc = ex_desc,
+        tmp_make = (random.choice(ex_make)),
+        tmp_model = random.choice(ex_model[tmp_make[0]]),
+        tmp_color = random.choice(ex_color),
+        tmp_info = ex_info,
+
+        new_objects[i] = AmberAlert(
+        name = tmp_name,
+        description = tmp_desc,
+        date = date.today(),
+        vehicle_make = tmp_make,
+        vehicle_model = tmp_model,
+        vehicle_color = tmp_color,
+        vehicle_info = tmp_info,
+        vehicle_LP = randomLP(6)
+        )
