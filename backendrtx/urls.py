@@ -18,6 +18,6 @@ from rtxapi import urls as rtxapi
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include(rtxapi)),
+    path('',include(rtxapi))
 ]
 

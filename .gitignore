@@ -5,3 +5,5 @@ key.json
 data511/
 *.mp4
 *.txt
+keys.py
+yolov8model

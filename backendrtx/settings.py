@@ -39,8 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     #APIS
-    'rtxapi.apps.RtxapiConfig',
-    'rest_framework'
+    'rtxapi',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [

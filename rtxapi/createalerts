@@ -1,9 +1,7 @@
-from rtxapi.models import AmberAlert
+from models import AmberAlert
 import random
 import string
 from datetime import date
-
-
 
 ex_make = ["Ford", "Toyota", "Honda", "BMW","Tesla"]
 ex_model = {
@@ -16,7 +14,7 @@ ex_model = {
 ex_info = ["No additional information on vehicle"]
 ex_desc = "There is a missing male 8 yro last seen"
 ex_color = ["Black", "White", "Blue", "Red","Gray"]
-ex_name = ["Sally Smith", "John Miller"]
+ex_name = ["Sally Smith", "John Miller",'Lucas Lipa','Camolot Sam']
 
 def randomLP(x):
     LP = ""
@@ -44,3 +42,5 @@ def populateDB(x):
         vehicle_info = tmp_info,
         vehicle_LP = randomLP(6)
         )
+
+populateDB(2)
