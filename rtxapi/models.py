@@ -15,5 +15,6 @@ class AmberAlert(models.Model):
     vehicle_LP = models.CharField(max_length=10)
     alert_lat = models.CharField(max_length=10) 
     alert_long = models.CharField(max_length=10) 
+    active = models.BooleanField(default=False)
     class Meta:
         verbose_name = "AmberAlert"
