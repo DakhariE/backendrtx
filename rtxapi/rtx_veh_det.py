@@ -9,12 +9,17 @@ Assistance: OpenAI. (2024). ChatGPT (4) [Large language model]. https://chat.ope
 Date: 02/13/2024.
 ====================================================================================================================================================
 '''
-
-import keys
+from .keys import *
 import requests
+# ==================================================URLs for the requests========================================================================================================================
+urls = [
+    "https://api.carnet.ai/v2/mmg/detect?box_offset=0&box_min_width=180&box_min_height=180&box_min_ratio=1&box_max_ratio=3.15&box_select=all&features=color&region=NA",
+    "https://api.carnet.ai/v2/mmg/detect?box_offset=0&box_min_width=180&box_min_height=180&box_min_ratio=1&box_max_ratio=3.15&box_select=center&region=DEF",
+    "https://api.carnet.ai/v2/mmg/detect?box_offset=0&box_min_width=180&box_min_height=180&box_min_ratio=1&box_max_ratio=3.15&box_select=center&features=angle&region=DEF"
+]
 #==========================This function Get the car detals from Carnet.ai useing the API=====================================
-def get_car_details(image_path, urls):
-    api_key = keys.carnet_apikey  
+def get_car_details(image_path, urls=urls):
+    api_key = carnet_apikey  
     headers = {
         'accept': 'application/json',
         'api-key': api_key,
@@ -34,14 +39,15 @@ def get_car_details(image_path, urls):
             combined_response['error'] = 'Failed to fetch data'
             combined_response['status_code'] = response.status_code
             break  # Exit if any request fails
-
     return combined_response
-
-'''========This code formats the response from the API to a more readable format================================================================================='''
+'''==========This code formats the response from the API to a more readable format================================================================================='''
 def format_response(response_json):
-    formatted_response = ["Car Detected"]
-    car_detected_printed = False  # Initialize the flag
-    if response_json.get('is_success', False):
+    response_dict = {}
+    print(response_json)
+    if response_json['detections'] == []:
+        response_dict['Success'] = False
+    else:
+        response_dict['Success'] = True
         # Initialize containers for the highest probability results
         max_mmg = None
         max_color = None
@@ -59,37 +65,17 @@ def format_response(response_json):
             max_angle = current_angle if not max_angle or (current_angle and current_angle.get('probability', 0) > max_angle.get('probability', 0)) else max_angle
 
         # Add the highest probability results to the formatted response
-        if max_mmg:
-            formatted_response.append(f"Make: {max_mmg.get('make_name', 'N/A')}, Model: {max_mmg.get('model_name', 'N/A')}, Generation: {max_mmg.get('generation_name', 'N/A')}, Years: {max_mmg.get('years', 'N/A')}, Probability: {max_mmg.get('probability', 0):.2f}")
-        if max_color:
-            formatted_response.append(f"Color: {max_color.get('name', 'N/A')}, Probability: {max_color.get('probability', 0):.2f}")
-        if max_angle:
-            formatted_response.append(f"Angle: {max_angle.get('name', 'N/A')}, Probability: {max_angle.get('probability', 0):.2f}")
-    else:
-        formatted_response.append("Detection was unsuccessful.")
+        response_dict['Make'] = max_mmg['make_name']
+        response_dict['Model'] = max_mmg['model_name']
+        response_dict['MM_prob'] = max_mmg['probability']
+        response_dict['Color'] = max_color['name']
+        response_dict['C_prob'] = max_color['probability']
+        response_dict['Angle'] = max_angle['name']
+        response_dict['A_prob'] = max_angle['probability']
 
-    return "\n".join(formatted_response)
+    return response_dict
+'''==========This code is the main code that calls the above functions to get the car details========================================================================================================='''
 
-
-
-'''=====This code is the main code that calls the above functions to get the car details========================================================================================================='''
-# ==================================================URLs for the requests========================================================================================================================
-urls = [
-    "https://api.carnet.ai/v2/mmg/detect?box_offset=0&box_min_width=180&box_min_height=180&box_min_ratio=1&box_max_ratio=3.15&box_select=all&features=color&region=NA",
-    "https://api.carnet.ai/v2/mmg/detect?box_offset=0&box_min_width=180&box_min_height=180&box_min_ratio=1&box_max_ratio=3.15&box_select=center&region=DEF",
-    "https://api.carnet.ai/v2/mmg/detect?box_offset=0&box_min_width=180&box_min_height=180&box_min_ratio=1&box_max_ratio=3.15&box_select=center&features=angle&region=DEF"
-]
-
-image_path = 'Carnet_request/Veh_Images/bmw_blue.jpeg'  # Replace with your actual image path
-response_json = get_car_details(image_path, urls)
-formatted_text = format_response(response_json)
-
-print("===============================Responds==================================================================")
-
-print(formatted_text)
-
-print("========================================================================================================")
-
-
-
-#==================End of the code======================================================================================================================================================================
+# image_path = 'madza.jpg'  # Replace with your actual image path
+# response_json = get_car_details(image_path, urls)
+# formatted_text = format_response(response_json)

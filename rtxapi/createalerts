@@ -35,7 +35,6 @@
 #         new_objects[i] = AmberAlert(
 #         name = tmp_name,
 #         description = tmp_desc,
-#         date = date.today(),
 #         vehicle_make = tmp_make,
 #         vehicle_model = tmp_model,
 #         vehicle_color = tmp_color,
