@@ -19,7 +19,11 @@ storage = pyrebase.storage()
 # # mostRecentSub = next(reversed(data))
 # # up = database.child(f"UserData/YJTCNKotRiMWHugY2a9wgBlmutu2/submissions/{mostRecentSub}").get().val()
 # # print(up)
+
 data22 = {"test": 5, "Success": False}
-findingUpdateLocation = database.child(f"UserData/YJTCNKotRiMWHugY2a9wgBlmutu2/submissions").get().val()
+findingUpdateLocation = database.child(f"UserData/RT5Bfq5TaSfXsHQEUznoT82QWGe2/submissions").get().val()
 mostRecentSub = next(reversed(findingUpdateLocation))
-print(dir(mostRecentSub))
+print(mostRecentSub)
+# findingUpdateLocation = database.child(f"UserData/RT5Bfq5TaSfXsHQEUznoT82QWGe2/submissions").get().val()
+# mostRecentSub = next(reversed(findingUpdateLocation))
+# print(mostRecentSub)

@@ -43,7 +43,6 @@ def get_car_details(image_path, urls=urls):
 '''==========This code formats the response from the API to a more readable format================================================================================='''
 def format_response(response_json):
     response_dict = {}
-    print(response_json)
     if response_json['detections'] == []:
         response_dict['Success'] = False
     else:

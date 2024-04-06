@@ -51,29 +51,11 @@ def processCheckQ():
         Obj = carnetQ[-1]
         Obj.downloadImg(Obj.photoURL)
         Obj.results = Obj.getCarnetResults()
-        print("Results:", Obj.results)
         findingUpdateLocation = database.child(f"UserData/{Obj.UID}/submissions").get().val()
-        # print("Here1")
-        # time.sleep(4)
-        # print("Done sleeping!")
-        # mostRecentSub = next(reversed(findingUpdateLocation))
-        # print(mostRecentSub)
-        database.child(f"UserData/{Obj.UID}/status").update(Obj.results)
+        mostRecentSub = next(reversed(findingUpdateLocation))
+        database.child(f"UserData/{Obj.UID}/submissions/{mostRecentSub}/status").update(Obj.results)
         carnetQ.pop(-1)
         print("Finished processing", Obj.UID)
-
-        # try:
-        #     Results = UserResults.objects.get(UserID=Obj.UID)
-        #     Results.result_data = Obj.results
-        #     Results.date = date = Now()
-        #     Results.save()
-        #     print("Already there")
-        # except:
-        #     UserResults(
-        #         UserID = Obj.UID,
-        #         result_data = Obj.results,
-        #     ).save()
-        #     print("Newly... created!")
 
 '''
 Class to process photo submissions
@@ -89,12 +71,15 @@ class submissionProcessor:
         processCheckQ()
 
     def getCarnetResults(self, photo="carnetImg.jpg"):
-        print(os.getcwd())
         response_json = rtx_veh_det.get_car_details(photo)
         formatted_text = rtx_veh_det.format_response(response_json)
         os.remove("carnetImg.jpg")
         return formatted_text
 
+    def updateLocation(self, UID):
+        pass
+    def updatePoints(self, number):
+        pass
     def downloadImg(self,url, imgFile="carnetImg.jpg"):
         response = requests.get(url)
         if response.status_code == 200:
@@ -142,15 +127,11 @@ def handle_added(event):
     if event.path == '/':
         pass
     else:
-        if event.path[-11:] == "submissions":
-            UID = event.path[1:-11]
-        else:
-            UID = event.path[1:-1]
-        print(event.path)
-        try:
+        if len(event.path[1:]) == 28:
+            UID = event.path[1:]
             url = event.data['latest_sub']
-            #submissionProcessor(UID, url)
-        except:
+            submissionProcessor(UID, url)
+        else:
             pass
 ref.listen(handle_added)
 
@@ -175,10 +156,11 @@ def filterAlert(alertID):
     Lat2, Long2 =  float(alert['alert_lat'].value), float((alert['alert_long'].value))
     # This loop interates through all User locations to determine if they are within range of the alert.
     for x in locations:
+        usersFound = 0
         Lat1, Long1 = locations[x]['last_location']['latitude'], locations[x]['last_location']['longitude']
         distance = m.acos( m.cos(m.radians(90-Lat1)) * m.cos(m.radians(90-Lat2)) + m.sin(m.radians(90-Lat1)) * m.sin(m.radians(90-Lat2)) * m.cos(m.radians(Long1 - Long2))) * 6371
         if distance <= 5:
-            print(distance)
+            print(f"Users found: {usersfound}")
             sendToToken(alertID, x)
 
 '''
@@ -202,12 +184,13 @@ def sendToToken(alertID, tokens):
         'description': alert['description'].value,
         'date': str(alert['date'].value),
         'vehicle_model': alert['vehicle_model'].value,
-        'vehicle_color': alert['vehicle_model'].value,
-        'vehicle_make': alert['vehicle_model'].value,
-        'vehicle_LP': alert['vehicle_model'].value,
+        'vehicle_color': alert['vehicle_color'].value,
+        'vehicle_make': alert['vehicle_make'].value,
+        'vehicle_LP': alert['vehicle_LP'].value,
         'coords': str(alert['alert_lat'].value) + '|' + str(alert['alert_long'].value)
     },
     tokens = [tokens]
     )
     response = messaging.send_multicast(message)
+    print("Alert sent!")
     return redirect('http://127.0.0.1:8000/')
