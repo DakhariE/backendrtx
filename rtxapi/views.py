@@ -16,6 +16,7 @@ import time
 import os
 from django.db.models.functions import Now
 from . import rtx_veh_det
+from . import split_objects
 
 '''
 This section initializes the firebase SDK
@@ -50,6 +51,11 @@ def processCheckQ():
     while carnetQ:
         Obj = carnetQ[-1]
         Obj.downloadImg(Obj.photoURL)
+        #
+        
+        split_objects.detect_and_crop_specific_objects("carnetImg.jpg")
+        
+        #
         Obj.results = Obj.getCarnetResults()
         findingUpdateLocation = database.child(f"UserData/{Obj.UID}/submissions").get().val()
         mostRecentSub = next(reversed(findingUpdateLocation))
@@ -75,7 +81,16 @@ class submissionProcessor:
         formatted_text = rtx_veh_det.format_response(response_json)
         os.remove("carnetImg.jpg")
         return formatted_text
-
+    
+    def returnCroppedImages(self, photo="carnetImg.jpg"):
+        object_images = split_objects.detect_and_crop_specific_objects(photo)        
+        for i, x in object_images:
+            filename = f"car_{i}.jpg"
+            x.save(filename)
+            storage.child("submission").put(filename)  
+            storage.child(f"submission/{filename}").get_url(None) 
+            os.remove(filename)
+        
     def updateLocation(self, UID):
         pass
     def updatePoints(self, number):
