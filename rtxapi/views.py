@@ -13,6 +13,7 @@ import firebase_admin
 from firebase_admin import credentials, messaging, db, storage
 import requests
 import time
+from datetime import datetime
 import os
 from django.db.models.functions import Now
 from . import rtx_veh_det
@@ -41,6 +42,7 @@ Variables containing Locations and UserData from firebase realtime database, and
 carnetQ = []
 locations = database.child("Locations").get().val()
 users = database.child("UserData").get().val()
+alerts = database.child("Alerts").get().val()
 
 '''
 This function checks the queue and processes the remaining elements
@@ -48,13 +50,17 @@ This function checks the queue and processes the remaining elements
 
 def processCheckQ():
     while carnetQ:
+        # Processing Images
         Obj = carnetQ[-1]
+        carnetQ.pop(-1)
         Obj.downloadImg(Obj.photoURL)
         Obj.results = Obj.getCarnetResults()
-        findingUpdateLocation = database.child(f"UserData/{Obj.UID}/submissions").get().val()
-        mostRecentSub = next(reversed(findingUpdateLocation))
-        database.child(f"UserData/{Obj.UID}/submissions/{mostRecentSub}/status").update(Obj.results)
-        carnetQ.pop(-1)
+        print(Obj.results)
+        #Send results
+        database.child(f"UserData/{Obj.UID}/submissions/{Obj.subID}/status").update(Obj.results)
+        #Updating Location/Adding points
+        Obj.processMatch(Obj.alertID)
+        # Remove Object, garbage collector.
         print("Finished processing", Obj.UID)
 
 '''
@@ -62,13 +68,20 @@ Class to process photo submissions
 '''
 
 class submissionProcessor:
-    def __init__(self, UID, photoURL): 
+    def __init__(self, UID, photoURL, alertID, subID): 
         self.UID = UID
+        self.subID = subID
         self.photoURL = photoURL
         self.results = None
+        self.alertID = int(alertID)
         carnetQ.insert(0, self)
 
         processCheckQ()
+        
+    def updatePoints(self, points):
+        if points != None:
+            userP = int(database.child(f"UserData/{self.UID}/points").get().val())
+            database.child(f"UserData/{self.UID}").update({"points": points + userP})
 
     def getCarnetResults(self, photo="carnetImg.jpg"):
         response_json = rtx_veh_det.get_car_details(photo)
@@ -76,10 +89,28 @@ class submissionProcessor:
         os.remove("carnetImg.jpg")
         return formatted_text
 
-    def updateLocation(self, UID):
-        pass
-    def updatePoints(self, number):
-        pass
+    def processMatch(self, alertID):
+        if alertID == 0:
+            print("Not Alert")
+            pass
+        else:
+            alertObj = AmberAlert.objects.get(id=alertID)
+            alert = AlertSerializer(alertObj)
+            prevUser = alert['recent_Interaction'].value
+            if not prevUser:
+                print("prev")
+                userP = int(database.child(f"UserData/{prevUser}/points").get().val())
+                updateUserP = database.child(f"UserData/{prevUser}").update({"points": 50 + userP})
+            if(self.results['Success']):
+                if((alert['vehicle_color'].value == self.results['Color']) and (alert['vehicle_model'].value == self.results['Model']) and (alert['vehicle_make'].value == self.results['Make'])):
+                    alertObj.alert_lat = database.child(f"{self.UID}/submissions/{self.subID}/data/lat").get().val()
+                    alertObj.alert_long = database.child(f"{self.UID}/submissions/{self.subID}/data/long").get().val()
+                    alertObj.recent_Interaction = self.UID
+                    alertObj.save()
+                    self.updatePoints(500)
+            else:
+                self.updatePoints(10)
+
     def downloadImg(self,url, imgFile="carnetImg.jpg"):
         response = requests.get(url)
         if response.status_code == 200:
@@ -101,21 +132,6 @@ def sendAlert(request):
   return Response(serializer.data)
 
 '''
-This function gets the data from a specific user based their username, should be changed to userID
-'''
-
-def getUserData(userName):
-    return users[userName]
-
-'''
-This function updates Userdata in firebase database
-'''
-
-def updateUserData(UserID, score=None, result=None):
-
-    return 200
-
-'''
 This function is called whenever there is an update in the Realtime database.
 the event waits for an update in the UserData folder of the database.
 then adds an instance of submissionProcessor to a queue.
@@ -127,11 +143,16 @@ def handle_added(event):
     if event.path == '/':
         pass
     else:
-        if len(event.path[1:]) == 28:
-            UID = event.path[1:]
-            url = event.data['latest_sub']
-            submissionProcessor(UID, url)
-        else:
+
+        day = datetime.today().strftime('%#m-%#d-%Y')
+        try:
+            if((list(event.data.keys())[0]).startswith(day)):
+                subID = list(event.data.keys())[0]
+                url = event.data[f'{subID}']['photo']
+                alertID = event.data[f'{subID}']['alert_id']
+                UID = event.path.split('/')[1]
+                submissionProcessor(UID, url, alertID, subID)
+        except:
             pass
 ref.listen(handle_added)
 
@@ -154,14 +175,22 @@ def filterAlert(alertID):
     alertObj = AmberAlert.objects.get(id=alertID)
     alert = AlertSerializer(alertObj)
     Lat2, Long2 =  float(alert['alert_lat'].value), float((alert['alert_long'].value))
+    usersFound = 0
+    tokens = []
     # This loop interates through all User locations to determine if they are within range of the alert.
     for x in locations:
-        usersFound = 0
-        Lat1, Long1 = locations[x]['last_location']['latitude'], locations[x]['last_location']['longitude']
-        distance = m.acos( m.cos(m.radians(90-Lat1)) * m.cos(m.radians(90-Lat2)) + m.sin(m.radians(90-Lat1)) * m.sin(m.radians(90-Lat2)) * m.cos(m.radians(Long1 - Long2))) * 6371
-        if distance <= 5:
-            print(f"Users found: {usersfound}")
-            sendToToken(alertID, x)
+        try:
+            print(x)
+            Lat1, Long1 = locations[x]['last_location']['latitude'], locations[x]['last_location']['longitude']
+            distance = m.acos( m.cos(m.radians(90-Lat1)) * m.cos(m.radians(90-Lat2)) + m.sin(m.radians(90-Lat1)) * m.sin(m.radians(90-Lat2)) * m.cos(m.radians(Long1 - Long2))) * 6371
+            if distance <= 5:
+                usersFound = usersFound + 1
+                database.child(f"Alerts/{x}").update({f"Alert{alertID}": {'alertID': alertID, 'Region': alert['name'].value, 'car':{'make': alert['vehicle_make'].value , 'model':alert['vehicle_model'].value, 'color': alert['vehicle_color'].value}}, })
+                tokens.append(x)
+        except:
+            pass
+    sendToToken(alertID, tokens)
+    print(f"Users found: {usersFound}")
 
 '''
 This functions send the alert to a user based on their device token.
@@ -188,9 +217,31 @@ def sendToToken(alertID, tokens):
         'vehicle_make': alert['vehicle_make'].value,
         'vehicle_LP': alert['vehicle_LP'].value,
         'coords': str(alert['alert_lat'].value) + '|' + str(alert['alert_long'].value)
-    },
-    tokens = [tokens]
+    }, 
+    tokens = tokens
     )
     response = messaging.send_multicast(message)
+    print(response)
     print("Alert sent!")
     return redirect('http://127.0.0.1:8000/')
+
+def sendPing():
+    #Retrieve All users and send notification to ping them.
+    print("Pinging...")
+    devices = database.child("Locations").get().val()
+    tokens = list(dict(devices))
+
+    message = messaging.MulticastMessage(
+    notification=messaging.Notification(
+    title = "Ping",
+    body = "This serves to update the location!"
+    ),
+    data={
+        'data': "Update your Location"
+    }, 
+    tokens = tokens
+    )
+    response = messaging.send_multicast(message)
+    print(response)
+    y = [print(x[0:10]) for x in tokens]
+    print(f"{len(tokens)}... sent")

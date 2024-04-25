@@ -17,10 +17,11 @@ class AmberAlert(models.Model):
     alert_lat = models.CharField(max_length=10) 
     alert_long = models.CharField(max_length=10) 
     active = models.BooleanField(default=False)
+    recent_Interaction = models.CharField(max_length=100, default = False) 
 
     def __str__(self):
         return self.name
-
+     
 class UserResults(models.Model):
     UserID = models.CharField(max_length=100)
     result_data = models.JSONField()

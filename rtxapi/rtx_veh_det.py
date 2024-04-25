@@ -30,6 +30,7 @@ def get_car_details(image_path, urls=urls):
     for url in urls:
         with open(image_path, 'rb') as image_file:
             response = requests.post(url, headers=headers, data=image_file)
+            print(response)
         if response.status_code == 200:
             response_json = response.json()
             combined_response['detections'].extend(response_json.get('detections', []))
@@ -39,7 +40,9 @@ def get_car_details(image_path, urls=urls):
             combined_response['error'] = 'Failed to fetch data'
             combined_response['status_code'] = response.status_code
             break  # Exit if any request fails
+    print(combined_response)
     return combined_response
+
 '''==========This code formats the response from the API to a more readable format================================================================================='''
 def format_response(response_json):
     response_dict = {}
@@ -71,6 +74,7 @@ def format_response(response_json):
         response_dict['C_prob'] = max_color['probability']
         response_dict['Angle'] = max_angle['name']
         response_dict['A_prob'] = max_angle['probability']
+        #response_dict['Direction']
 
     return response_dict
 '''==========This code is the main code that calls the above functions to get the car details========================================================================================================='''
