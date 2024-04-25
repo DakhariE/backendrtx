@@ -137,24 +137,24 @@ the event waits for an update in the UserData folder of the database.
 then adds an instance of submissionProcessor to a queue.
 '''
 
-ref = db.reference("UserData")
-def handle_added(event):
-    # First listen call returns entire reference with path of / so we ignore it and wait for other calls.
-    if event.path == '/':
-        pass
-    else:
+# ref = db.reference("UserData")
+# def handle_added(event):
+#     # First listen call returns entire reference with path of / so we ignore it and wait for other calls.
+#     if event.path == '/':
+#         pass
+#     else:
 
-        day = datetime.today().strftime('%#m-%#d-%Y')
-        try:
-            if((list(event.data.keys())[0]).startswith(day)):
-                subID = list(event.data.keys())[0]
-                url = event.data[f'{subID}']['photo']
-                alertID = event.data[f'{subID}']['alert_id']
-                UID = event.path.split('/')[1]
-                submissionProcessor(UID, url, alertID, subID)
-        except:
-            pass
-ref.listen(handle_added)
+#         day = datetime.today().strftime('%#m-%#d-%Y')
+#         try:
+#             if((list(event.data.keys())[0]).startswith(day)):
+#                 subID = list(event.data.keys())[0]
+#                 url = event.data[f'{subID}']['photo']
+#                 alertID = event.data[f'{subID}']['alert_id']
+#                 UID = event.path.split('/')[1]
+#                 submissionProcessor(UID, url, alertID, subID)
+#         except:
+#             pass
+# ref.listen(handle_added)
 
 '''
 This Function is called whenever there is an update or create in the sqlite Alert database.
