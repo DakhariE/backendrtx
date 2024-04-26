@@ -14,8 +14,8 @@ class AmberAlert(models.Model):
     vehicle_make = models.CharField(max_length=50)
     vehicle_info = models.TextField()
     vehicle_LP = models.CharField(max_length=10)
-    alert_lat = models.CharField(max_length=10) 
-    alert_long = models.CharField(max_length=10) 
+    alert_lat = models.CharField(max_length=100) 
+    alert_long = models.CharField(max_length=100) 
     active = models.BooleanField(default=False)
     recent_Interaction = models.CharField(max_length=100, default = False) 
 
