@@ -5,8 +5,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status,permissions
 from rest_framework.decorators import api_view
-from .serializers import AlertSerializer, ResultsSerializer
-from .models import AmberAlert, UserResults
+from .serializers import AlertSerializer
+from .models import AmberAlert
 import pyrebase
 from .keys import *
 import firebase_admin
@@ -54,10 +54,7 @@ def processCheckQ():
         Obj = carnetQ[-1]
         carnetQ.pop(-1)
         Obj.downloadImg(Obj.photoURL)
-        
-        Obj.results = Obj.getCarnetResults()
-        
-        print(Obj.results)
+        #Obj.results = Obj.getCarnetResults()
         #Send results
         database.child(f"UserData/{Obj.UID}/submissions/{Obj.subID}/status").update(Obj.results)
         #Updating Location/Adding points
@@ -87,10 +84,13 @@ class submissionProcessor:
 
     def getCarnetResults(self, photo="carnetImg.jpg"):
         response_json = rtx_veh_det.get_car_details(photo)
-        print(response_json)
         formatted_text = rtx_veh_det.format_response(response_json)
         os.remove("carnetImg.jpg")
         return formatted_text
+
+    def addAlertDirection(self):
+        azimuth = int(database.child(f"UserData/{self.UID}/submissions/{self.subID}/data/azimuth").get().val())
+        pass 
 
     def processMatch(self, alertID):
         if alertID == 0:
@@ -226,12 +226,10 @@ def sendToToken(alertID, tokens):
     tokens = tokens
     )
     response = messaging.send_multicast(message)
-    print("Alert sent!")
     return redirect('http://127.0.0.1:8000/')
 
 def sendPing():
     #Retrieve All users and send notification to ping them.
-    print("Pinging...")
     devices = database.child("Locations").get().val()
     tokens = list(dict(devices))
 
@@ -246,5 +244,4 @@ def sendPing():
     tokens = tokens
     )
     response = messaging.send_multicast(message)
-    y = [print(x[0:10]) for x in tokens]
-    print(f"{len(tokens)}... sent")
+    print(f"{len(tokens)}... pings sent")

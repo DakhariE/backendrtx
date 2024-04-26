@@ -7,13 +7,13 @@ import datetime
 class AmberAlert(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
-    date = models.DateField(default = Now)
+    date = models.DateTimeField(auto_now_add=True)
     vehicle_make = models.CharField(max_length=50)
     vehicle_model = models.CharField(max_length=50)
     vehicle_color = models.CharField(max_length=50)
     vehicle_make = models.CharField(max_length=50)
-    vehicle_info = models.TextField()
-    vehicle_LP = models.CharField(max_length=10)
+    vehicle_info = models.TextField(blank=True)
+    vehicle_LP = models.CharField(max_length=100, blank=True)
     alert_lat = models.CharField(max_length=100) 
     alert_long = models.CharField(max_length=100) 
     active = models.BooleanField(default=False)
@@ -21,13 +21,3 @@ class AmberAlert(models.Model):
 
     def __str__(self):
         return self.name
-     
-class UserResults(models.Model):
-    UserID = models.CharField(max_length=100)
-    result_data = models.JSONField()
-    date = models.DateTimeField(default = Now())
-
-    def __str__(self):
-        return self.UserID
-
-
