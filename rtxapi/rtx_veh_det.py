@@ -72,7 +72,6 @@ def format_response(response_json):
         response_dict['C_prob'] = max_color['probability']
         response_dict['Angle'] = max_angle['name']
         response_dict['A_prob'] = max_angle['probability']
-        #response_dict['Direction']
 
     return response_dict
 '''==========This code is the main code that calls the above functions to get the car details========================================================================================================='''

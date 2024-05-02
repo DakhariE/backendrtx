@@ -54,7 +54,7 @@ def processCheckQ():
         Obj = carnetQ[-1]
         carnetQ.pop(-1)
         Obj.downloadImg(Obj.photoURL)
-        #Obj.results = Obj.getCarnetResults()
+        Obj.results = Obj.getCarnetResults()
         #Send results
         database.child(f"UserData/{Obj.UID}/submissions/{Obj.subID}/status").update(Obj.results)
         #Updating Location/Adding points
@@ -88,13 +88,10 @@ class submissionProcessor:
         os.remove("carnetImg.jpg")
         return formatted_text
 
-    def addAlertDirection(self):
-        azimuth = int(database.child(f"UserData/{self.UID}/submissions/{self.subID}/data/azimuth").get().val())
-        pass 
-
     def processMatch(self, alertID):
         if alertID == 0:
             print("Not Alert")
+            self.updatePoints(10)
             pass
         else:
             alertObj = AmberAlert.objects.get(id=alertID)
@@ -103,7 +100,7 @@ class submissionProcessor:
             if not prevUser:
                 print("prev")
                 userP = int(database.child(f"UserData/{prevUser}/points").get().val())
-                updateUserP = database.child(f"UserData/{prevUser}").update({"points": 50 + userP})
+                updateUserP = database.child(f"UserData/{prevUser}").update({"points": 100 + userP})
             if(self.results['Success']):
                 #(alert['vehicle_color'].value == self.results['Color'])
                 if((alert['vehicle_model'].value == self.results['Model']) and (alert['vehicle_make'].value == self.results['Make'])):
@@ -111,11 +108,34 @@ class submissionProcessor:
                     new_long = database.child(f"UserData/{self.UID}/submissions/{self.subID}/data/long").get().val()
                     alertObj.alert_lat = new_lat
                     alertObj.alert_long = new_long
+                    """
+                    This is where we would add code to calculate direction vehicle.
+                    azimuth = int(database.child(f"UserData/{self.UID}/submissions/{self.subID}/data/azimuth").get().val())
+                    if results['Angle'] == back:
+                        alertObj.direction = azimuth 
+                    elseif results['Angle'] == front:
+                        alertObj.direction = azimuth + 180
+                    elseif results['Angle'] == left:
+                        alertObj.direction = azimuth - 98
+                    elseif results['Angle'] == right:
+                        alertObj.direction = azimuth + 90
+                    elseif results['Angle'] == frontleft:
+                        alertObj.direction = azimuth - 135
+                    elseif results['Angle'] == frontright:
+                        alertObj.direction = azimuth + 135 
+                    elseif results['Angle'] == backleft:
+                        alertObj.direction = azimuth + 45
+                    elseif results['Angle'] == backright:
+                        alertObj.direction = azimuth - 45
+                    else:
+                        continue
+                        We would then convert the angle into directions to display to users.
+                    """
                     alertObj.recent_Interaction = self.UID
                     alertObj.save()
                     self.updatePoints(500)
             else:
-                self.updatePoints(10)
+                self.updatePoints(1)
 
     def downloadImg(self,url, imgFile="carnetImg.jpg"):
         response = requests.get(url)
